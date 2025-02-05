@@ -23,7 +23,7 @@ void setup() {
 }
 
 void draw() {
-  background(255);
+  background(155);
   drawPageBoundaries(); // Draw A3, A4, A5 boundaries
   if (modifiedGcode != null) {
     drawGcodePreview(); // Draw the G-code preview
@@ -130,6 +130,7 @@ void drawPageBoundaries() {
 
   pushStyle();
   stroke(200);
+  strokeWeight(0.5);
   noFill();
   if (showA3) rect(0, 0, A3_WIDTH, A3_HEIGHT); // A3 landscape
   if (showA4) rect(0, 0, A4_WIDTH, A4_HEIGHT); // A4 portrait
@@ -153,6 +154,7 @@ void drawRulers() {
     if (mm % 50 == 0) {
       line(x, rulerY, x, rulerY + 10);
       fill(0);
+      textSize(10);
       textAlign(CENTER, TOP);
       text(mm, x, rulerY + 12);
     } else {
@@ -170,10 +172,11 @@ void drawRulers() {
   for (int mm = 0; mm <= 450; mm += 10) {
     float y = height - 50 - mm * scale;
     if (mm % 50 == 0) {
+      textSize(10);
       line(rulerX, y, rulerX - 10, y);
       fill(0);
       textAlign(RIGHT, CENTER);
-      text(mm, rulerX - 15, y);
+      text(mm, rulerX - 10, y);
     } else {
       line(rulerX, y, rulerX - 5, y);
     }
@@ -181,14 +184,14 @@ void drawRulers() {
 }
 
 void drawOffsetInfo() {
-  fill(0);
-  textSize(16);
+  fill(255,255,0);
+  textSize(14);
   textAlign(LEFT, TOP);
-  text("G-code File: " + gcodeFilename, 10, 10);
-  text("X Offset: " + xOffset + " mm", 10, 30);
-  text("Y Offset: " + yOffset + " mm", 10, 50);
-  text("Press 'S' to save modified G-code", 10, 70);
-  text("Press '3', '4', '5' to toggle A3/A4/A5 boundaries", 10, 90);
+  text("G-code File: " + gcodeFilename, 40, 10);
+  text("X Offset: " + xOffset + " mm", 40, 30);
+  text("Y Offset: " + yOffset + " mm", 40, 50);
+  text("Press 'S' to save modified G-code", 40, 70);
+  text("Press '3', '4', '5' to toggle A3/A4/A5 boundaries", 40, 90);
 }
 
 void drawMouseCoordinates() {
