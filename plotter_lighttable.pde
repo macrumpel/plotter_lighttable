@@ -50,24 +50,36 @@ void applyOffsets() {
   List<String> newGcode = new ArrayList<String>();
   for (String line : gcode) {
     if (line.startsWith("G0") || line.startsWith("G1")) {
-      String[] parts = line.split(" ");
-      for (int i = 0; i < parts.length; i++) {
-        if (parts[i].startsWith("X")) {
-          float x = float(parts[i].substring(1)) + xOffset;
-          parts[i] = "X" + x;
-        } else if (parts[i].startsWith("Y")) {
-          float y = float(parts[i].substring(1)) + yOffset;
-          parts[i] = "Y" + y;
+      // Check if the line contains the pen change position (X=500 Y=350)
+      if (line.contains("X500") && line.contains("Y350")) {
+        newGcode.add(line); // Add the line as-is without applying offsets
+      } else {
+        // Apply offsets to other lines
+        String[] parts = line.split(" ");
+        for (int i = 0; i < parts.length; i++) {
+          if (parts[i].startsWith("X")) {
+            float x = float(parts[i].substring(1)) + xOffset;
+            parts[i] = "X" + x;
+          } else if (parts[i].startsWith("Y")) {
+            float y = float(parts[i].substring(1)) + yOffset;
+            parts[i] = "Y" + y;
+          }
         }
+        line = String.join(" ", parts);
+        newGcode.add(line);
       }
-      line = String.join(" ", parts);
+    } else {
+      // Add non-movement commands as-is
+      newGcode.add(line);
     }
-    newGcode.add(line);
   }
   modifiedGcode = newGcode; // Atomic update
 }
 
 void drawGcodePreview() {
+  // Create a copy of the modifiedGcode list to avoid ConcurrentModificationException
+  List<String> gcodeCopy = new ArrayList<String>(modifiedGcode);
+
   pushMatrix();
   translate(50, height - 50); // Lower-left origin
   scale(scale, -scale); // Flip Y-axis
@@ -75,7 +87,7 @@ void drawGcodePreview() {
   float lastX = 0, lastY = 0; // Track previous position
   boolean isDrawing = false; // True during G1 moves
 
-  for (String line : modifiedGcode) {
+  for (String line : gcodeCopy) {
     if (line.startsWith("G0") || line.startsWith("G1")) {
       float x = lastX, y = lastY; // Default to last position
       String[] parts = line.split(" ");
@@ -85,12 +97,10 @@ void drawGcodePreview() {
       }
 
       if (line.startsWith("G1")) {
-        // Draw a solid line for G1 (drawing)
         stroke(0); // Black for drawing
         line(lastX, lastY, x, y);
         isDrawing = true;
       } else if (line.startsWith("G0")) {
-        // Draw a dashed line for G0 (rapid move)
         stroke(255, 204, 0); // Yellow
         drawDashedLine(lastX, lastY, x, y, 5); // Dashed line with 5mm segments
         isDrawing = false;
@@ -184,7 +194,7 @@ void drawRulers() {
 }
 
 void drawOffsetInfo() {
-  fill(255,255,0);
+  fill(255, 255, 0);
   textSize(14);
   textAlign(LEFT, TOP);
   text("G-code File: " + gcodeFilename, 40, 10);
